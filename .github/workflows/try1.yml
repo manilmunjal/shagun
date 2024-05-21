@@ -15,8 +15,8 @@ jobs:
 
       - name: Set up Git credentials
         run: |
-          git config --global user.email "ayushsaini963@gmail.com"
-          git config --global user.name "Ayushsaini20"
+          git config --global user.email "manilmunjal@gmail.com"
+          git config --global user.name "manilmunjal"
       - name: Install Git and Git SVN
         run: |
           sudo add-apt-repository ppa:git-core/ppa -y
@@ -67,15 +67,15 @@ jobs:
           git commit -m "Initial commit with binaries moved to JFrog"
           
           # Add GitHub repository as remote
-          git remote add github_repo https://github.com/Ayushsaini20/svn2git.git
+          git remote add github_repo https://github.com/manilmunjal/shagun.git
           
           # Pull changes from the remote repository to integrate them
           git fetch github_repo
           git pull --rebase github_repo main
           # Push to GitHub
           git config --global credential.helper store
-          git config --global user.email "ayushsaini963@gmail.com"
-          git config --global user.name "Ayushsaini20"
-          echo "https://Ayushsaini20:${{secrets.PAT}}@github.com/Ayushsaini20/svn2git.git" > ~/.git-credentials
+          git config --global user.email "manilmunjal@gmail.com"
+          git config --global user.name "manilmunjal"
+          echo "https://manilmunjal:${{secrets.PAT}}@github.com/manilmunjal/shagun.git" > ~/.git-credentials
           git push --all github_repo
           git push --tags github_repo
