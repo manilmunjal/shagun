@@ -48,11 +48,11 @@ jobs:
           git commit -m "Initial commit with binaries moved to JFrog"
           
           # Add GitHub repository as remote
-          git remote add github_repo https://github.com/Ayushsaini20/svn2git.git
+          git remote add github_repo https://github.com/manilmunjal/shagun.git
           # Push to GitHub
           git config --global credential.helper store
           git config --global user.email "$GIT_EMAIL"
           git config --global user.name "$GIT_NAME"
-          echo "https://Ayushsaini20:${{secrets.PAT}}@github.com/Ayushsaini20/svn2git.git" > ~/.git-credentials
+          echo "https://manilmunjal:${{secrets.PAT}}@github.com/manilmunjal/shagun.git" > ~/.git-credentials
           git push --all github_repo
           git push --tags github_repo
