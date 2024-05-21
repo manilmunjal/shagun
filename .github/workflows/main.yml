@@ -31,8 +31,8 @@ jobs:
       
       - name: Clone SVN repository
         run: |
-          git svn clone <SVN_REPO_URL> --stdlayout --authors-file=authors.txt
-          cd <your_svn_project>
+          git svn clone https://eu-subversion.assembla.com/svn/devopsgit2svn^demo.IDC/ --stdlayout --authors-file=authors.txt
+          cd devopsgit2svn^demo.IDC
       
       - name: Extract JFrog Artifactory URLs for binary files
         run: |
