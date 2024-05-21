@@ -71,7 +71,7 @@ jobs:
           
           # Pull changes from the remote repository to integrate them
           git fetch github_repo
-          git pull --rebase github_repo main
+          # git pull --rebase github_repo main
           # Push to GitHub
           git config --global credential.helper store
           git config --global user.email "manilmunjal@gmail.com"
