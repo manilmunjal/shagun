@@ -9,36 +9,46 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      
       - name: Set up Git credentials
         run: |
-          git config --global user.email "ayushsaini963@gmail.com"
-          git config --global user.name "Ayushsaini20"
+          git config --global user.email "manilmunjal@gmail.com"
+          git config --global user.name "manilmunjal"
+      
       - name: Install JFrog CLI
         run: |
           curl -fL https://getcli.jfrog.io | sh
           sudo mv jfrog /usr/local/bin/jfrog
+      
       - name: Ensure SVN directory structure and permissions
         run: |
           mkdir -p svn_repo/.svn/tmp
           sudo chmod -R 777 svn_repo/.svn/tmp
+      
       - name: Clean up any previous SVN checkout
         run: |
           rm -rf svn_repo
+      
       - name: Clone SVN repository
         run: |
-
+          git svn clone <SVN_REPO_URL> --stdlayout --authors-file=authors.txt
+          cd <your_svn_project>
+      
       - name: Extract JFrog Artifactory URLs for binary files
         run: |
           find . -type f \( -name "*.exe" -o -name "*.dll" -o -name "*.bin" \) | while read binary; do
             binary_name=$(basename "$binary")
             jfrog_url="https://ayushsaini.jfrog.io/artifactory/demo-generic-local/$binary_name"
-
+            echo "$jfrog_url" > "${binary}.url"
+          done
+      
       - name: Upload binaries to JFrog Artifactory
         run: |
           find . -type f \( -name "*.exe" -o -name "*.dll" -o -name "*.bin" \) | while read binary; do
             binary_name=$(basename "$binary")
-            curl -u "ayush.sai@statusneo.com:CSWC++@sa2023" --upload-file "$binary" "https://ayushsaini.jfrog.io/artifactory/demo-generic-local/$binary_name" || { echo "Failed to upload $binary to JFrog"; exit 1; }
+            curl -u "${{ secrets.JFROG_USERNAME }}:${{ secrets.JFROG_PASSWORD }}" --upload-file "$binary" "https://ayushsaini.jfrog.io/artifactory/demo-generic-local/$binary_name" || { echo "Failed to upload $binary to JFrog"; exit 1; }
           done
+      
       - name: Commit and push to GitHub
         run: |
           # Add all files excluding binaries
@@ -49,10 +59,13 @@ jobs:
           
           # Add GitHub repository as remote
           git remote add github_repo https://github.com/manilmunjal/shagun.git
-          # Push to GitHub
+          
+          # Configure GitHub credentials
           git config --global credential.helper store
-          git config --global user.email "$GIT_EMAIL"
-          git config --global user.name "$GIT_NAME"
-          echo "https://manilmunjal:${{secrets.PAT}}@github.com/manilmunjal/shagun.git" > ~/.git-credentials
+          git config --global user.email "manilmunjal@gmail.com"
+          git config --global user.name "manilmunjal"
+          echo "https://manilmunjal:${{ secrets.PAT }}@github.com/manilmunjal/shagun.git" > ~/.git-credentials
+          
+          # Push to GitHub
           git push --all github_repo
           git push --tags github_repo
