@@ -1,0 +1,89 @@
+working code with mime type and commit history:
+name: SVN to GitHub Migration
+ 
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on pushes to the main branch
+ 
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+ 
+      - name: Set up Git credentials
+        run: |
+          git config --global credential.helper store
+          git config --global user.email "ayushsaini963@gmail.com" # Parameterize/ Bot/ Service Account
+          git config --global user.name "ayushsaini20" # Parameterize/ Bot/ Service Account
+           echo "https://Ayushsaini20:${{secrets.PAT}}@github.com/Ayushsaini20/svn2git.git" > ~/.git-credentials
+ 
+      - name: Install Git and Git SVN
+        run: |
+          sudo add-apt-repository ppa:git-core/ppa -y
+          sudo apt-get update
+          sudo apt-get install -y git git-svn
+ 
+      - name: Install JFrog CLI
+        run: |
+          curl -fL https://getcli.jfrog.io | sh
+          sudo mv jfrog /usr/local/bin/jfrog
+ 
+      - name: Configure SVN credentials
+        run: |
+          echo "machine eu-subversion.assembla.com login AyushSaini password CSWC++@sa2023" > ~/.netrc
+          chmod 600 ~/.netrc
+ 
+      - name: Ensure SVN directory structure and permissions
+        run: |
+          mkdir -p svn_repo/.svn/tmp
+          sudo chmod -R 777 svn_repo/.svn/tmp
+ 
+      - name: Clean up any previous SVN checkout
+        run: rm -rf svn_repo
+ 
+      - name: Clone SVN repository with history
+        run: git svn clone https://eu-subversion.assembla.com/svn/devopsgit2svn^demo.IDC/ svn_repo
+ 
+      - name: Extract JFrog Artifactory URLs for binary files
+        run: |
+          cd svn_repo
+          # Create a file to store the URLs
+          touch binary_urls.txt
+          find . -type f ! -path "*/.git/*" | while read -r file; do
+            mime_type=$(file --mime-type -b "$file")
+            case "$mime_type" in
+              application/octet-stream|application/x-dosexec)
+                binary_name=$(basename "$file")
+                jfrog_url="https://ayushsaini.jfrog.io/artifactory/demo-generic-local/$binary_name" # Parameterize
+                echo "$jfrog_url" >> binary_urls.txt
+                ;;
+            esac
+          done
+          git add binary_urls.txt
+ 
+      - name: Upload binaries to JFrog Artifactory
+        run: |
+          cd svn_repo
+          cat binary_urls.txt | while read -r jfrog_url; do
+            binary_name=$(basename "$jfrog_url")
+            binary_path=$(find . -name "$binary_name")
+            curl -u "ayush.sai@statusneo.com:CSWC++@sa2023" --upload-file "$binary_path" "$jfrog_url" || { echo "Failed to upload $binary_path to JFrog"; exit 1; }
+          done
+ 
+      - name: Commit and push to GitHub
+        run: |
+          cd svn_repo
+          # Add the URLs file to the repository
+          git add binary_urls.txt
+          # Add all files excluding binaries
+          find . -type f ! -path "*/.git/*" ! -iname "*.exe" ! -iname "*.dll" ! -iname "*.bin" -exec git add {} +
+          # Commit URL pointers back to Git instead of binaries
+          git commit -m "Initial commit with binaries moved to JFrog"
+          # Add GitHub repository as remote
+          git remote add github_repo https://github.com/Ayushsaini20/svn2git.git # Parameterize
+          git push --all github_repo
+          git push --tags github_repo
